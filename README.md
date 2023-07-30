@@ -1,3 +1,10 @@
+
+    ___     ____     ____       _____                                             
+   /   |   / __ \   / __ \     / ___/  _____  ____ _   ____    ____   ___    _____
+  / /| |  / /_/ /  / /_/ /     \__ \  / ___/ / __ `/  / __ \  / __ \ / _ \  / ___/
+ / ___ | / _, _/  / ____/     ___/ / / /__  / /_/ /  / / / / / / / //  __/ / /    
+/_/  |_|/_/ |_|  /_/         /____/  \___/  \__,_/  /_/ /_/ /_/ /_/ \___/ /_/   
+
 The program performs an ARP scan on the local network to discover devices (hosts) connected to it. 
 The script utilizes the scapy library to send ARP packets and receive responses from devices in the network. 
 It then displays the IP addresses, MAC addresses, and hostnames (if available) of the discovered devices.
