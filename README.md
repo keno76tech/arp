@@ -10,4 +10,6 @@ and the discovered devices will be shown with their IP addresses, MAC addresses,
 
 Scanning devices without the consent of other users violates their rights and may be illegal.
 
+If the program does not work correctly, in line 29, change "arp = ARP(pdst=f'192.168.0.0/24')" to your IP/24.
+
 The program was created by keno.
