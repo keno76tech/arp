@@ -1,58 +1,35 @@
 from scapy.all import ARP, Ether, srp
-from termcolor import colored
-import socket
+import requests
 
-class arp_system():
+# Interfejs, który ma być użyty do skanowania (zmień na odpowiedni interfejs)
+interface = "Wi-Fi"
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+# Tworzymy pakiet ARP, który będzie wysyłany, aby zidentyfikować urządzenia
+arp = ARP(pdst="192.168.1.0/24")
 
-        # Ustawianie kolorów systemowych
-        self.color_t = 'green'
-        self.color_f = 'red'
-        self.color_c = 'magenta'
+# Tworzymy pakiet Ethernet, który zawiera pakiet ARP
+ether = Ether(dst="ff:ff:ff:ff:ff:ff")
 
-        self.symbol_t = colored(str('+'), f'{self.color_t}')
-        self.symbol_f = colored(str('-'), f'{self.color_f}')
-        self.symbol_c = colored(str('<>'), f'{self.color_c}')
+# Łączymy pakiet Ethernet z pakietem ARP
+packet = ether/arp
 
-        # Ustawianie ustawień sieciowych
-        try:
-            self.my_ip = socket.gethostbyname(socket.gethostname())
-        except socket.error:
-            self.my_ip = None
+# Wysyłamy pakiet ARP i odbieramy odpowiedzi
+result = srp(packet, timeout=3, verbose=0, iface=interface)[0]
 
-    def arp_hosts(self, *args, **kwargs):
-        super().__init__(*args, *kwargs)
+# Tworzymy słownik do przechowywania wyników
+devices = []
 
-        # tworzenie zapytania ARP
-        arp = ARP(pdst=f'192.168.0.0/24')
-        ether = Ether(dst="ff:ff:ff:ff:ff:ff")
-        packet = ether/arp
+# Przetwarzamy otrzymane odpowiedzi
+for sent, received in result:
+    devices.append({'ip': received.psrc, 'mac': received.hwsrc})
 
-        # wysłanie zapytania ARP i otrzymanie odpowiedzi
-        result = srp(packet, timeout=3, verbose=0)[0]
+# Pobieramy dostawcę na podstawie adresu MAC z bazy danych OUI
+for device in devices:
+    mac = device['mac'][:8]  # OUI to pierwsze 3 bajty adresu MAC
+    response = requests.get(f"https://macvendors.com/query/{mac}")
+    vendor = response.text if response.status_code == 200 else "N/A"
+    device['vendor'] = vendor
 
-        # wypisanie wyników
-        print()
-        print(f"[{self.symbol_c}] Devices in the network:")
-        for sent, received in result:
-            ip = received.psrc
-            mac = received.hwsrc
-            try:
-                hostname = socket.gethostbyaddr(ip)[0]
-                color_h = self.color_t
-            except socket.herror:
-                hostname = "Unknown"
-                color_h = self.color_f
-
-            hostname = colored(str(hostname), f'{color_h}')
-            ip = colored(str(ip), f'{self.color_t}')
-            mac = colored(str(mac), f'{self.color_t}')
-
-            print(f"[{self.symbol_t}] ip: {ip}, hostname: {hostname}, mac: {mac}")
-
-if __name__ == "__main__":
-    system = arp_system()
-
-    system.arp_hosts()
+# Wyświetlamy wyniki
+for device in devices:
+    print(f"IP Address: {device['ip']}, MAC Address: {device['mac']}, Vendor: {device['vendor']}")
